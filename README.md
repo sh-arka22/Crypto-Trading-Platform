@@ -1,1 +1,1 @@
-# Crypto-Trading-Pratform
+# Crypto-Trading-Platform
