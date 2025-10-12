@@ -3,6 +3,7 @@
 #include <vector>
 #include "OrderBookEntry.h"
 #include "MerkelMain.h"
+#include "CSVReader.h"
 
 // Keep only these utility functions in main.cpp
 double computeAveragePrice(const std::vector<OrderBookEntry>& entries) {
@@ -58,6 +59,7 @@ int main() {
     
     MerkelMain app{};
     // app.init();
-    
+    // CSVReader csvReader;
+    // CSVReader::readCSV("../OrderBook.csv");
     return 0;
 }

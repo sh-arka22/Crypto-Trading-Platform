@@ -39,11 +39,7 @@ MerkelMain::MerkelMain() {
 
 int MerkelMain::loadOrderBook() {
 
-    std::cout << "Loading order book..." << std::endl;
-    // Implementation to load order book data
-    orders.push_back(OrderBookEntry(100.0, 0.5, "2023-10-01T12:00:00Z", "BTC-USD", OrderBookType::bid));
-    orders.push_back(OrderBookEntry(101.0, 0.3, "2023-10-01T12:01:00Z", "BTC-USD", OrderBookType::ask));
-    // More loading logic here
+    orders = CSVReader::readCSV("../OrderBook.csv");
     return orders.size();
 }
 
@@ -97,10 +93,23 @@ void MerkelMain::printHelp() {
     std::cout << "Help: This is a crypto trading application. Use the menu to navigate." << std::endl;
 }
 
+/** This function displays market statistics */
 void MerkelMain::printMarketStats() {
     std::cout << "Market Stats: Displaying current Order Book..." << orders.size() << std::endl;
+    unsigned int bids = 0;
+    unsigned int asks = 0;
+    for(const auto& order : orders){
+        if(order.orderType == OrderBookType::bid){
+            bids++;
+        } 
+        else if(order.orderType == OrderBookType::ask) {
+            asks++;
+        }
+    }
+    std::cout << "Total Bids: " << bids << ", Total Asks: " << asks << std::endl;
 }
 
+/** This function allows users to enter offer details */
 void MerkelMain::enterOfferDetails() {
     std::cout << "Enter Offer Details: Please provide the offer details..." << std::endl;
 }
