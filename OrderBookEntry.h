@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-enum class OrderBookType { bid, ask};
+enum class OrderBookType { bid, ask, unknown, sale};
 class OrderBookEntry {
 public:
     double price;

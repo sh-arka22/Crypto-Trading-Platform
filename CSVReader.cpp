@@ -29,6 +29,19 @@ std::vector<std::string> CSVReader::tokenise(std::string csvLine, char separator
     return tokens;
 }
 
+OrderBookEntry CSVReader::stringToOBE(  const std::string& price, const std::string& amount, const std::string& timestamp,const std::string& product,OrderBookType orderBookType) {
+
+    
+
+
+    return OrderBookEntry(  std::stod(price), 
+                            std::stod(amount), 
+                            timestamp, 
+                            product, 
+                            orderBookType
+                        );
+}
+
 /** Implement conversion from tokens to OrderBookEntry */
 OrderBookEntry CSVReader::stringToOBE(const std::vector<std::string>& tokens) {
 
