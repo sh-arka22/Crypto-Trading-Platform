@@ -103,18 +103,32 @@ std::vector<OrderBookEntry> OrderBook::matchAsksToBids(std::string product, std:
         OrderBookEntry ask = askQueue.top();
         OrderBookEntry bid = bidQueue.top();
 
+        OrderBookType type = OrderBookType::asksale; // Default to asksale
+        
+
         if (bid.price >= ask.price) {
             // Determine the trade amount (partial matching allowed)
             double tradeAmount = std::min(ask.amount, bid.amount);
 
-            // Create a sale entry
             OrderBookEntry sale(
                 ask.price, // Use ask price for the trade
                 tradeAmount,
                 timestamp,
                 product,
-                OrderBookType::sale // New type for completed trades
+                type // Use the defined type for completed trades
             );
+
+            // Create a sale entry
+            if(bid.username == "simuser") {
+                sale.orderType = OrderBookType::bidsale; // If the bid is from the user, mark it as bidsale
+                sale.username = "simuser";
+            }
+            if(ask.username == "simuser") {
+                sale.orderType = OrderBookType::asksale; // If the ask is from the user, mark it as asksale
+                sale.username = "simuser";
+            }
+
+
             sales.push_back(sale);
 
             // Update the amounts
@@ -131,7 +145,8 @@ std::vector<OrderBookEntry> OrderBook::matchAsksToBids(std::string product, std:
             if (bid.amount > 0) {
                 bidQueue.push(bid); // Push back remaining bid
             }
-        } else {
+        } 
+        else {
             // No match possible for this ask
             // Create a sale entry similar to the original implementation
             OrderBookEntry sale(
@@ -139,7 +154,7 @@ std::vector<OrderBookEntry> OrderBook::matchAsksToBids(std::string product, std:
                 0.0,       // No trade amount
                 timestamp,
                 product,
-                OrderBookType::sale // New type for completed trades
+                type// New type for completed trades
             );
             sales.push_back(sale);
 

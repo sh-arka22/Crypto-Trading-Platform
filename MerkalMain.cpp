@@ -15,6 +15,10 @@ void MerkelMain::init() {
     //     }
     // }
     currentTime = orderBook.getEarliestTime();
+    // wallet.insertCurrency("USD", 10000.0); // Initial USD balance
+    wallet.insertCurrency("BTC", 10.0);      // Initial BTC balance
+    // wallet.insertCurrency("ETH", 5.0);      // Initial ETH balance
+    // wallet.insertCurrency("LTC", 10.0);     // Initial LTC balance 
     printMenu();
 
     int userOption = -1;
@@ -151,8 +155,16 @@ void MerkelMain::enterAsk() {
         
         try{
             OrderBookEntry obe = CSVReader::stringToOBE(tokens[1], tokens[2], currentTime, tokens[0], OrderBookType::ask);
-            orderBook.insertOrder(obe);
-            std::cout << "Parsed OrderBookEntry - Price: " << obe.price << ", Amount: " << obe.amount << ", Timestamp: " << obe.timestamp << ", Product: " << obe.product << std::endl;
+            obe.username = "simuser"; // Set username to "user" for user-entered orders
+            if(wallet.canFulfillOrder(obe)) {
+                orderBook.insertOrder(obe);
+                std::cout << "Ask order placed successfully!" << std::endl;
+            } 
+            else {
+                std::cout << "Insufficient funds in wallet to place this ask order." << std::endl;
+            }
+            // For debugging purposes, print the parsed OrderBookEntry
+            std::cout << "Parsed OrderBookEntry - Price: " << obe.price << ", Amount: " << obe.amount << ", Timestamp: " << obe.timestamp << ", Product: " << obe.product << ", Username: " << obe.username << std::endl;
         } 
         catch (const std::exception& e) {
             std::cout << "MerkalMain::enterAsk -> Error: " << e.what() << std::endl;
@@ -165,18 +177,62 @@ void MerkelMain::enterAsk() {
 void MerkelMain::enterBid() {
     std::cout << "Enter Bid Details: Please provide the bid details..." << std::endl;
     std::string input;
-    // std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); // To ignore the newline character left in the input buffer
     std::getline(std::cin, input);
+
+    std::vector<std::string> tokens = CSVReader::tokenise(input, ',');
+    if(tokens.size() != 3) {
+        std::cout << "MerkelMain::enterBid -> Error: Please provide correct BID details" << std::endl;
+        return;
+    }
+    else {
+        try {
+            OrderBookEntry obe = CSVReader::stringToOBE(tokens[1], tokens[2], currentTime, tokens[0], OrderBookType::bid);
+            obe.username = "simuser"; // Set username to "user" for user-entered orders
+            if(wallet.canFulfillOrder(obe)) {
+                orderBook.insertOrder(obe);
+                std::cout << "Bid order placed successfully!" << std::endl;
+            } 
+            else {
+                std::cout << "Insufficient funds in wallet to place this bid order." << std::endl;
+            }
+            // For debugging purposes, print the parsed OrderBookEntry
+            std::cout << "Parsed OrderBookEntry - Price: " << obe.price << ", Amount: " << obe.amount << ", Timestamp: " << obe.timestamp << ", Product: " << obe.product << ", Username: " << obe.username << std::endl;
+        } 
+        catch (const std::exception& e) {
+            std::cout << "MerkelMain::enterBid -> Error: " << e.what() << std::endl;
+        }
+    }
     std::cout << "You entered: " << input << std::endl;
 }
 
 /** This function prints wallet information */
 void MerkelMain::printWalletInfo() {
     std::cout << "Wallet Info: Displaying your wallet information..." << std::endl;
+    std::cout << wallet.toString() << std::endl;
+    // std::cout << wallet.toString() << std::endl; --- IGNORE ---
+    // std::cout << "Print Wallet Info: Displaying your wallet information..." << std::endl; --- IGNORE ---
+
+    // std::cout << wallet.toString() << std::endl; --- IGNORE ---
 }
 
 /** This function advances to the next time frame in the order book */
 void MerkelMain::goToNextTimeFrame() {
     std::cout << "Moving to the next time frame..." << std::endl;
-    currentTime = orderBook.getNextTime(currentTime);
+    for(std::string product : orderBook.getKnownProducts()){
+        std::cout << "Matching orders for product: " << product << " at time: " << currentTime << std::endl;
+        std::vector<OrderBookEntry> sales = orderBook.matchAsksToBids(product, currentTime);
+        for(const OrderBookEntry& sale : sales) {
+            std::cout << "Sale - Price: " << sale.price << ", Amount: " << sale.amount << ", Timestamp: " << sale.timestamp << ", Product: " << sale.product << ", Type: ";
+            if(sale.username == "simuser") {
+                //update the wallet only if the user was involved in the trade
+                wallet.processSale(sale);
+                // std::cout << "User Sale"; --- IGNORE ---
+                // std::cout << "Market Sale"; --- IGNORE ---
+                std::cout << "User Sale";
+            } 
+            else {
+                std::cout << "Market Sale";
+            }
+        }
+    }
 }

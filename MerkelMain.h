@@ -3,6 +3,8 @@
 #include <iostream>
 #include "CSVReader.h"
 #include "OrderBook.h"
+#include "Wallet.h"
+#pragma once
 class MerkelMain {
 public:
     MerkelMain(/* args */);
@@ -24,4 +26,6 @@ private:
     std::string currentTime;
 
     OrderBook orderBook{"../OrderBook.csv"};
+
+    Wallet wallet;
 };

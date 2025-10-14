@@ -1,6 +1,6 @@
 #pragma once
 #include <string>
-enum class OrderBookType { bid, ask, unknown, sale};
+enum class OrderBookType { bid, ask, unknown, asksale, bidsale};
 class OrderBookEntry {
 public:
     double price;
@@ -8,6 +8,7 @@ public:
     std::string timestamp;
     std::string product;
     OrderBookType orderType;
+    std::string username;
     /*
         // Brace initialization (uniform initialization)
         OrderBookEntry(double price): price{price} {}
@@ -17,5 +18,5 @@ public:
     */
     OrderBookEntry();
     OrderBookEntry(double _price);
-    OrderBookEntry(double p, double a, const std::string& ts, const std::string& prod, OrderBookType ot);
+    OrderBookEntry(double p, double a, const std::string& ts, const std::string& prod, OrderBookType ot, std::string username = "dataset");
 };

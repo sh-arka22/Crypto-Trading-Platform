@@ -6,8 +6,10 @@ OrderBookEntry::OrderBookEntry() {};
 OrderBookEntry::OrderBookEntry(double price) : price{price} {}
 
 
-OrderBookEntry::OrderBookEntry(double p, double a, const std::string& ts, const std::string& prod, OrderBookType ot) 
-    : price{p}, amount{a}, timestamp{ts}, product{prod}, orderType{ot} {}
+OrderBookEntry::OrderBookEntry(double p, double a, const std::string& ts, const std::string& prod, OrderBookType ot, std::string username) 
+    : price{p}, amount{a}, timestamp{ts}, product{prod}, orderType{ot}, username{username} {
+
+}
 
 
 
