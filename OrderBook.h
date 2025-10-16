@@ -5,6 +5,9 @@
 
 class OrderBook {
 public:
+    /** Default constructor - does not load any CSV file. */
+    OrderBook();
+
     /** This constructor initializes the OrderBook with a CSV file. */
     OrderBook(std::string csvFilename);
     /** Returns a vector of known products from the dataset. */

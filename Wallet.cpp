@@ -51,22 +51,17 @@ bool Wallet::removeCurrency(const std::string &currency, double amount) {
 }
 
 bool Wallet::canFulfillOrder(OrderBookEntry &orderEntry) const {
-    /** checks if the wallet can cope with this ask or bid */
-
-    // Extract the currencies from the product string (e.g., "BTC/USD" -> "BTC" and "USD")
-    std::vector<std::string> currencies = CSVReader::tokenise(orderEntry.product, '/');
-    if (currencies.size() != 2) {
+    std::vector<std::string> parts = CSVReader::tokenise(orderEntry.product, '/');
+    if (parts.size() != 2) {
         throw std::invalid_argument("Invalid product format. Expected 'BASE/QUOTE'.");
     }
 
-    //ask -> we need to have enough of the base currency (e.g., BTC)
-    if(orderEntry.orderType == OrderBookType::ask) {
-        return containsCurrency(currencies[0], orderEntry.amount); // Use the base currency
+    if (orderEntry.orderType == OrderBookType::ask) {
+        return containsCurrency(parts[0], orderEntry.amount);
     }
-
-    //bid -> we need to have enough of the quote currency (e.g., USD)
-    else if(orderEntry.orderType == OrderBookType::bid) {
-        return containsCurrency(currencies[1], orderEntry.amount); // Use the quote currency
+    if (orderEntry.orderType == OrderBookType::bid) {
+        const double cost = orderEntry.price * orderEntry.amount;
+        return containsCurrency(parts[1], cost);
     }
     return false;
 }

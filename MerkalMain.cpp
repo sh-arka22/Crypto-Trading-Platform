@@ -3,22 +3,21 @@
 void MerkelMain::init() {
     std::cout << "Initializing the Crypto Trading App..." << std::endl;
 
-
-    // while(true){
-    //     int returnValue = loadOrderBook();
-    //     if(returnValue > 0){
-    //         std::cout << "Order book loaded with " << returnValue << " entries." << std::endl;
-    //         break;
-    //     }
-    //     else{
-    //         std::cout << "Failed to load order book. Retrying..." << std::endl;
-    //     }
-    // }
+    loadOrderBook();
+    
     currentTime = orderBook.getEarliestTime();
-    // wallet.insertCurrency("USD", 10000.0); // Initial USD balance
-    wallet.insertCurrency("BTC", 10.0);      // Initial BTC balance
-    // wallet.insertCurrency("ETH", 5.0);      // Initial ETH balance
-    // wallet.insertCurrency("LTC", 10.0);     // Initial LTC balance 
+    
+    // Initialize wallet with starting balances
+    wallet.insertCurrency("USDT", 10000.0); // Initial USDT balance
+    wallet.insertCurrency("BTC", 10.0);      // Initial BTC balance  
+    wallet.insertCurrency("ETH", 100.0);     // Initial ETH balance
+    
+    std::cout << "Initial wallet setup complete!" << std::endl;
+    printWalletInfo();
+
+
+    std::cout << "Starting at time: " << currentTime << std::endl;
+    
     printMenu();
 
     int userOption = -1;
@@ -41,11 +40,10 @@ MerkelMain::MerkelMain() {
     init();
 }
 
-// int MerkelMain::loadOrderBook() {
-
-//     orders = CSVReader::readCSV("../OrderBook.csv");
-//     return orders.size();
-// }
+void MerkelMain::loadOrderBook() {
+    orderBook = OrderBook("./OrderBook.csv"); // Make sure this loads the data
+    std::cout << "Order book loaded successfully!" << std::endl;
+}
 
 
 void MerkelMain::printMenu() {
@@ -218,21 +216,35 @@ void MerkelMain::printWalletInfo() {
 /** This function advances to the next time frame in the order book */
 void MerkelMain::goToNextTimeFrame() {
     std::cout << "Moving to the next time frame..." << std::endl;
-    for(std::string product : orderBook.getKnownProducts()){
+    for (const std::string& product : orderBook.getKnownProducts()) {
         std::cout << "Matching orders for product: " << product << " at time: " << currentTime << std::endl;
         std::vector<OrderBookEntry> sales = orderBook.matchAsksToBids(product, currentTime);
-        for(const OrderBookEntry& sale : sales) {
-            std::cout << "Sale - Price: " << sale.price << ", Amount: " << sale.amount << ", Timestamp: " << sale.timestamp << ", Product: " << sale.product << ", Type: ";
-            if(sale.username == "simuser") {
-                //update the wallet only if the user was involved in the trade
+        for (const OrderBookEntry& sale : sales) {
+            std::cout << "Sale - Price: " << sale.price
+                      << ", Amount: " << sale.amount
+                      << ", Timestamp: " << sale.timestamp
+                      << ", Product: " << sale.product
+                      << ", Type: ";
+            if (sale.username == "simuser") {
                 wallet.processSale(sale);
-                // std::cout << "User Sale"; --- IGNORE ---
-                // std::cout << "Market Sale"; --- IGNORE ---
                 std::cout << "User Sale";
-            } 
-            else {
+            } else {
                 std::cout << "Market Sale";
             }
+            std::cout << std::endl;
         }
     }
+
+    const std::string nextTime = orderBook.getNextTime(currentTime);
+    if (nextTime.empty()) {
+        std::cout << "No further timestamps available." << std::endl;
+    } else if (nextTime == currentTime) {
+        std::cout << "No newer timestamp found; staying at " << currentTime << "." << std::endl;
+    } else if (nextTime == orderBook.getEarliestTime()) {
+        std::cout << "Reached end of dataset; wrapping to earliest time: " << nextTime << std::endl;
+    } else {
+        std::cout << "Advancing to next timestamp: " << nextTime << std::endl;
+    }
+    currentTime = nextTime.empty() ? currentTime : nextTime;
 }
+

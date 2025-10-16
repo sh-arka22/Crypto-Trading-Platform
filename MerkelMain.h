@@ -12,7 +12,7 @@ public:
     /**Call this to start the simulation */
     void init();
 private:
-    // int loadOrderBook();
+    void loadOrderBook();
     void processUserOption(int userOption);
     void printMenu();
     int getUserInput();
@@ -25,7 +25,7 @@ private:
 
     std::string currentTime;
 
-    OrderBook orderBook{"../OrderBook.csv"};
+    OrderBook orderBook;
 
     Wallet wallet;
 };

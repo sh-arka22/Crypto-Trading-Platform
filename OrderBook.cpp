@@ -4,9 +4,16 @@
 #include <algorithm>
 #include <queue>
 
+OrderBook::OrderBook() {
+    // Default constructor: do not load any CSV file here.
+}
+
 OrderBook::OrderBook(std::string csvFilename) {
     std::cout << "Loading order book from: " << csvFilename << std::endl;
     orders = CSVReader::readCSV(csvFilename);
+    std::sort(orders.begin(), orders.end(), [](const OrderBookEntry& a, const OrderBookEntry& b){
+        return a.timestamp < b.timestamp;
+    });
 }
 
 std::vector<std::string> OrderBook::getKnownProducts() {
@@ -42,14 +49,21 @@ std::string OrderBook::getEarliestTime() {
     return std::string();
 }
 
-std::string OrderBook::getNextTime(std::string timestamp) {
+std::string OrderBook::getNextTime(const std::string timestamp) {
     if(orders.empty()) return std::string();
-    for(size_t i = 0; i < orders.size(); ++i) {
-        if(orders[i].timestamp != timestamp) {
-            return orders[i].timestamp;
+
+    bool seenCurrent = false;
+    std::string& firstTime = orders.front().timestamp;
+
+    for(const auto&order: orders){
+        if(seenCurrent && order.timestamp != timestamp) {
+            return order.timestamp;
+        }
+        if(order.timestamp == timestamp) {
+            seenCurrent = true;
         }
     }
-    return orders.back().timestamp;
+    return firstTime;
 }
 
 std::string OrderBook::getPreviousTime(std::string timestamp) {
@@ -103,69 +117,39 @@ std::vector<OrderBookEntry> OrderBook::matchAsksToBids(std::string product, std:
         OrderBookEntry ask = askQueue.top();
         OrderBookEntry bid = bidQueue.top();
 
-        OrderBookType type = OrderBookType::asksale; // Default to asksale
-        
+        if (bid.price < ask.price) {
+            // Best bid is below best ask; nothing else can match
+            break;
+        }
+        const double tradeAmount = std::min(ask.amount, bid.amount);
+        OrderBookEntry sale(
+            ask.price, // Use ask price for the sale
+            tradeAmount,
+            timestamp,
+            product,
+            OrderBookType::asksale // Indicate this is an ask sale,
+        );
+        if(bid.username != "simuser"){
+            sale.orderType = OrderBookType::bidsale; // If the bid is not from simuser, mark as bidsale
+            sale.username = "simuser";
+        }
+        if(ask.username != "simuser"){
+            sale.orderType = OrderBookType::asksale; // If the ask is not from simuser, mark as asksale
+            sale.username = "simuser";
+        }
+        sales.push_back(sale);
 
-        if (bid.price >= ask.price) {
-            // Determine the trade amount (partial matching allowed)
-            double tradeAmount = std::min(ask.amount, bid.amount);
+        ask.amount -= tradeAmount;
+        bid.amount -= tradeAmount;
 
-            OrderBookEntry sale(
-                ask.price, // Use ask price for the trade
-                tradeAmount,
-                timestamp,
-                product,
-                type // Use the defined type for completed trades
-            );
+        askQueue.pop();
+        bidQueue.pop();
 
-            // Create a sale entry
-            if(bid.username == "simuser") {
-                sale.orderType = OrderBookType::bidsale; // If the bid is from the user, mark it as bidsale
-                sale.username = "simuser";
-            }
-            if(ask.username == "simuser") {
-                sale.orderType = OrderBookType::asksale; // If the ask is from the user, mark it as asksale
-                sale.username = "simuser";
-            }
-
-
-            sales.push_back(sale);
-
-            // Update the amounts
-            ask.amount -= tradeAmount;
-            bid.amount -= tradeAmount;
-
-            // Remove fully matched orders from the queues
-            askQueue.pop();
-            bidQueue.pop();
-
-            if (ask.amount > 0) {
-                askQueue.push(ask); // Push back remaining ask
-            }
-            if (bid.amount > 0) {
-                bidQueue.push(bid); // Push back remaining bid
-            }
-        } 
-        else {
-            // No match possible for this ask
-            // Create a sale entry similar to the original implementation
-            OrderBookEntry sale(
-                bid.price, // Use bid price for the trade
-                0.0,       // No trade amount
-                timestamp,
-                product,
-                type// New type for completed trades
-            );
-            sales.push_back(sale);
-
-            // Update the amounts
-            ask.amount -= bid.amount;
-            bid.amount = 0;
-
-            // Remove the bid from the queue
-            bidQueue.pop();
-
-            continue; // Move to the next ask if this one cannot be matched
+        if(ask.amount > 0) {
+            askQueue.push(ask); // Reinsert ask if there's remaining amount
+        }
+        if(bid.amount > 0) {
+            bidQueue.push(bid); // Reinsert bid if there's remaining amount
         }
     }
 
