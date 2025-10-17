@@ -86,13 +86,10 @@ void Wallet::processSale(const OrderBookEntry &sale) {
 }
 
 std::string Wallet::toString() {
-
-    for(std::pair<std::string, double> pair : currencies) {
-        std::cout << pair.first << ": " << pair.second << std::endl;
-    }
     std::ostringstream oss;
-    for(const auto& pair : currencies) {
+    for (const auto& pair : currencies) {
         oss << pair.first << ": " << pair.second << "\n";
     }
     return oss.str();
 }
+
